@@ -1,19 +1,24 @@
 import os
 import random
 import sys
-import time
+
+import pygame
 
 
 REACH = 1
-NEIGHBOURHOODS = []
+NEIGHBOURHOODS = None
 
 
-def die(world, x, y):
+def die(world, x, y, pa=None):
     world[x][y] = False
+    if pa:
+        pa[x, y] = (255, 255, 255)
 
 
-def live(world, x, y):
+def live(world, x, y, pa=None):
     world[x][y] = True
+    if pa:
+        pa[x, y] = (0, 0, 0)
 
 
 def alive(world, x, y):
@@ -55,29 +60,37 @@ def check_livelihood(world, x, y):
         return neighbours == (1 + (REACH * 2))
 
 
-def step(world, new_world):
-    output = ""
+def step(world, new_world, surface):
+    # output = ""
+    pa = pygame.PixelArray(surface)
     for x in range(len(world)):
         for y in range(len(world[x])):
             if check_livelihood(world, x, y):
-                live(new_world, x, y)
-                output += 'O'
+                live(new_world, x, y, pa)
+                # output += 'O'
             else:
-                die(new_world, x, y)
-                output += ' '
-        output += '\n'
-    os.system('clear')
-    print(output)
+                die(new_world, x, y, pa)
+                # output += ' '
+        # output += '\n'
+    # os.system('clear')
+    # print(output)
+    pa.close()
+    pygame.display.flip()
     return new_world == world
 
 
+def create_world(max_x, max_y, value=False):
+    return [[value] * max_y for _ in range(max_x)]
+
+
 def first_world(max_x=100, max_y=200, population=1000, template=""):
+    pygame.init()
     max_x = int(max_x)
     max_y = int(max_y)
     population = int(population)
-    world = [[False] * max_y for _ in range(max_x)]
-    next_world = [[False] * max_y for _ in range(max_x)]
-    neighbourhoods = [[None] * max_y for _ in range(max_x)]
+    world = create_world(max_x, max_y)
+    next_world = create_world(max_x, max_y)
+    neighbourhoods = create_world(max_x, max_y, None)
     if population > 0:
         x = random.randint(0, max_x - 1)
         y = random.randint(0, max_y - 1)
@@ -101,15 +114,25 @@ def first_world(max_x=100, max_y=200, population=1000, template=""):
                 x += 1
                 if x == max_x:
                     break
-    return world, next_world, neighbourhoods
+
+    size = [max_x, max_y]
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("John Conway's Game of Life")
+    screen.fill((255, 255, 255))
+    pygame.display.flip()
+
+    return world, next_world, neighbourhoods, screen
 
 
 if __name__ == "__main__":  # pragma: no cover
     done = False
-    current_world, new_world, NEIGHBOURHOODS = first_world(*sys.argv[1:])
+    current_world, new_world, NEIGHBOURHOODS, screen = first_world(*sys.argv[1:])
     while not done:
-        done = step(current_world, new_world)
+        done = step(current_world, new_world, screen)
         tmp = current_world
         current_world = new_world
         new_world = tmp
-
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+    pygame.quit()
