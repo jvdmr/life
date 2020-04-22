@@ -17,7 +17,7 @@ class GameOfLife:
             max_x=100,
             max_y=100,
             population=2000,
-            template=None,
+            template="glider.txt",
             reach=1,
             wraparound=True,
     ):
@@ -39,6 +39,7 @@ class GameOfLife:
                     y = random.randint(0, max_y - 1)
                 self.set_world_value(self.world, x, y, True)
         else:
+            template = open(template, "r").read()
             x = 0
             y = 0
             for cell in template:
@@ -140,7 +141,12 @@ class GameOfLife:
 
 if __name__ == "__main__":  # pragma: no cover
     done = False
-    game = GameOfLife()
+    x = int(sys.argv[1])
+    y = int(sys.argv[2])
+    s = int(sys.argv[3])
+    t = sys.argv[4]
+    game = GameOfLife(x, y, s, t)
+#     game.print()
     while not done:
         done = game.step()
         game.flip()
