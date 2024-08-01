@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import argparse
 
 
 class GameOfLife:
@@ -140,13 +141,48 @@ class GameOfLife:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    done = False
-    x = int(sys.argv[1])
-    y = int(sys.argv[2])
-    s = int(sys.argv[3])
-    t = sys.argv[4]
-    game = GameOfLife(x, y, s, t)
+    argv = sys.argv[1:]
+    parser = argparse.ArgumentParser(
+        prog="Conway's Game of Life",
+    )
+
+    parser.add_argument(
+        "-s",
+        "--size",
+        type=int,
+        help="Square size of the game",
+        default=100,
+    )
+    parser.add_argument(
+        "-p",
+        "--population",
+        type=int,
+        help="Initial number of living cells in the game",
+        default=2000,
+    )
+    parser.add_argument(
+        "--wraparound",
+        action=argparse.BooleanOptionalAction,
+        help="Enable or disable wraparound",
+        default=True,
+    )
+    parser.add_argument(
+        "input",
+        nargs="?",
+        default=None,
+    )
+
+    args = parser.parse_args(argv)
+    x = args.size
+    y = args.size
+    p = args.population if args.input is None else 0
+
+    if args.population > args.size * args.size:
+        sys.exit("population too large for size!")
+
+    game = GameOfLife(x, y, p, args.input, wraparound=args.wraparound)
 #     game.print()
+    done = False
     while not done:
         done = game.step()
         game.flip()
